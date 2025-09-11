@@ -32,9 +32,9 @@ public class Parser {
                 eat(TokenType.STRING);
                 return new JsonString(s);
             case NUMBER:
-                double n = Double.parseDouble(currentToken.value);
+                long n = Long.parseLong(currentToken.value);
                 eat(TokenType.NUMBER);
-                return new JsonNumber((long) n);
+                return new JsonNumber(n);
             case BOOLEAN:
                 boolean b = Boolean.parseBoolean(currentToken.value);
                 eat(TokenType.BOOLEAN);
