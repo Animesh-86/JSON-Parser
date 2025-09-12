@@ -2,7 +2,9 @@ package core;
 
 public class Lexer {
     private String input;
-    private int pos;
+    private int pos = 0;
+    private int line = 1;
+    private int column = 0;
 
     public Lexer(String input, int pos) {
         this.input = input;

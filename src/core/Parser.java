@@ -1,10 +1,12 @@
 package core;
 
+import exception.JsonParseException;
+
 public class Parser {
     private Lexer lexer;
     private Token currentToken;
 
-    Parser(Lexer lexer) {
+    public Parser(Lexer lexer) {
         this.lexer = lexer;
         this.currentToken = lexer.nextToken();
     }
@@ -13,7 +15,12 @@ public class Parser {
         if (currentToken.type == type) {
             currentToken = lexer.nextToken();
         } else {
-            throw new RuntimeException("Expected " + type + " but found " + currentToken.type);
+//            throw new RuntimeException("Expected " + type + " but found " + currentToken.type);
+            throw new JsonParseException(
+                    "Expected " + type + " but found " + currentToken.type,
+                    currentToken.line,
+                    currentToken.column
+            );
         }
     }
 
