@@ -10,74 +10,97 @@ public class Lexer {
         this.input = input;
         this.pos = pos;
     }
-    
-    private char currentChar(){
+
+    private char currentChar() {
         return pos < input.length() ? input.charAt(pos) : '\0';
     }
-    
-    private void skipWhiteSpace(){
-        while(Character.isWhitespace(currentChar())) pos++;
+
+    private void advance() {
+        if (currentChar() == '\n') {
+            line++;
+            column = 0;
+        } else {
+            column++;
+        }
+        pos++;
     }
-    
-    public Token nextToken(){
+
+    private void skipWhiteSpace() {
+        while (Character.isWhitespace(currentChar())) advance();
+    }
+
+    public Token nextToken() {
         skipWhiteSpace();
         char c = currentChar();
-        
-        switch(c){
-            case '{': pos++; return new Token(TokenType.BEGIN_OBJECT, null);
-            case '}': pos++; return new Token(TokenType.END_OBJECT, null);
-            case '[': pos++; return new Token(TokenType.BEGIN_ARRAY, null);
-            case ']': pos++; return new Token(TokenType.END_ARRAY, null);
-            case ':': pos++; return new Token(TokenType.COLON, null);
-            case ',': pos++; return new Token(TokenType.COMMA, null);
+        int tokenLine = line;
+        int tokenColumn = column;
+
+        switch (c) {
+            case '{': advance(); return new Token(TokenType.BEGIN_OBJECT, null, tokenLine, tokenColumn);
+            case '}': advance(); return new Token(TokenType.END_OBJECT, null, tokenLine, tokenColumn);
+            case '[': advance(); return new Token(TokenType.BEGIN_ARRAY, null, tokenLine, tokenColumn);
+            case ']': advance(); return new Token(TokenType.END_ARRAY, null, tokenLine, tokenColumn);
+            case ':': advance(); return new Token(TokenType.COLON, null, tokenLine, tokenColumn);
+            case ',': advance(); return new Token(TokenType.COMMA, null, tokenLine, tokenColumn);
             case '"': return stringToken();
-            case '\0': return new Token(TokenType.EOF, null);
+            case '\0': return new Token(TokenType.EOF, null, tokenLine, tokenColumn);
             default:
-                if(Character.isDigit(c) || c == '-') return numberToken();
-                if(c == 't' || c == 'f') return booleanToken();
-                if(c == 'n') return nullToken();
-                throw new RuntimeException("Unexpected chraracter: " + c);
+                if (Character.isDigit(c) || c == '-') return numberToken();
+                if (c == 't' || c == 'f') return booleanToken();
+                if (c == 'n') return nullToken();
+                throw new RuntimeException("Unexpected character '" + c + "' at line " + line + ", column " + column);
         }
     }
 
     private Token nullToken() {
-        if(input.startsWith("null", pos)){
+        int tokenLine = line;
+        int tokenColumn = column;
+        if (input.startsWith("null", pos)) {
             pos += 4;
-            return new Token(TokenType.NULL, null);
+            column += 4;
+            return new Token(TokenType.NULL, null, tokenLine, tokenColumn);
         }
-        throw new RuntimeException("Invalid null");
+        throw new RuntimeException("Invalid null at line " + line + ", column " + column);
     }
 
     private Token booleanToken() {
-        if(input.startsWith("true", pos)){
-            pos += 4;
-            return new Token(TokenType.BOOLEAN, "true");
+        int tokenLine = line;
+        int tokenColumn = column;
+        if (input.startsWith("true", pos)) {
+            pos += 4; column += 4;
+            return new Token(TokenType.BOOLEAN, "true", tokenLine, tokenColumn);
         }
-
-        if(input.startsWith("false", pos)) {
-            pos += 5;
-            return new Token(TokenType.BOOLEAN, "false");
+        if (input.startsWith("false", pos)) {
+            pos += 5; column += 5;
+            return new Token(TokenType.BOOLEAN, "false", tokenLine, tokenColumn);
         }
-        throw new RuntimeException("Invalid boolean");
+        throw new RuntimeException("Invalid boolean at line " + line + ", column " + column);
     }
 
     private Token numberToken() {
+        int tokenLine = line;
+        int tokenColumn = column;
         StringBuilder sb = new StringBuilder();
-        while(Character.isDigit(currentChar()) || currentChar() == '.' || currentChar() == '-'){
+        while (Character.isDigit(currentChar()) || currentChar() == '.' || currentChar() == '-') {
             sb.append(currentChar());
-            pos++;
+            advance();
         }
-        return new Token(TokenType.NUMBER, sb.toString());
+        return new Token(TokenType.NUMBER, sb.toString(), tokenLine, tokenColumn);
     }
 
     private Token stringToken() {
-        pos++;
+        int tokenLine = line;
+        int tokenColumn = column;
+        advance(); // skip opening quote
         StringBuilder sb = new StringBuilder();
-        while(currentChar() != '"'){
+        while (currentChar() != '"' && currentChar() != '\0') {
             sb.append(currentChar());
-            pos++;
+            advance();
         }
-        pos++;
-        return new Token(TokenType.STRING, sb.toString());
+        if (currentChar() == '\0') {
+            throw new RuntimeException("Unterminated string at line " + tokenLine + ", column " + tokenColumn);
+        }
+        advance(); // skip closing quote
+        return new Token(TokenType.STRING, sb.toString(), tokenLine, tokenColumn);
     }
 }
