@@ -8,20 +8,21 @@ public class Parser {
 
     public Parser(Lexer lexer) {
         this.lexer = lexer;
-        this.currentToken = lexer.nextToken();
+        this.currentToken = lexer.nextToken(); // initialize
     }
 
-    private void eat(TokenType type) {
-        if (currentToken.type == type) {
+    private void eat(TokenType expected) {
+        if (currentToken.getType() == expected) {
             currentToken = lexer.nextToken();
         } else {
-//            throw new RuntimeException("Expected " + type + " but found " + currentToken.type);
-            throw new JsonParseException(
-                    "Expected " + type + " but found " + currentToken.type,
-                    currentToken.line,
-                    currentToken.column
-            );
+            throw error("Expected " + expected + " but found " + currentToken.getType());
         }
+    }
+
+    private JsonParseException error(String message) {
+        return new JsonParseException(
+                message + " at line " + currentToken.getLine() + ", column " + currentToken.getColumn()
+        );
     }
 
     public JsonValue parse() {
@@ -29,87 +30,78 @@ public class Parser {
     }
 
     private JsonValue parseValue() {
-        switch (currentToken.type) {
-            case BEGIN_OBJECT:
-                return parseObject();
-            case BEGIN_ARRAY:
-                return parseArray();
-            case STRING:
-                String s = currentToken.value;
+        switch (currentToken.getType()) {
+            case BEGIN_OBJECT: return parseObject();
+            case BEGIN_ARRAY:  return parseArray();
+            case STRING: {
+                String value = currentToken.getValue();
                 eat(TokenType.STRING);
-                return new JsonString(s);
-            case NUMBER:
-                long n = Long.parseLong(currentToken.value);
+                return new JsonString(value);
+            }
+            case NUMBER: {
+                String num = currentToken.getValue();
                 eat(TokenType.NUMBER);
-                return new JsonNumber(n);
-            case BOOLEAN:
-                boolean b = Boolean.parseBoolean(currentToken.value);
+                return new JsonNumber(num);
+            }
+            case BOOLEAN: {
+                String bool = currentToken.getValue();
                 eat(TokenType.BOOLEAN);
-                return new JsonBoolean(b);
-            case NULL:
+                return new JsonBoolean(Boolean.parseBoolean(bool));
+            }
+            case NULL: {
                 eat(TokenType.NULL);
                 return new JsonNull();
-            case EOF:
-                return null;
+            }
             default:
-                throw new RuntimeException("Unexpected token: " + currentToken);
+                throw error("Unexpected token " + currentToken.getType());
         }
     }
 
     private JsonObject parseObject() {
-        eat(TokenType.BEGIN_OBJECT);
         JsonObject obj = new JsonObject();
+        eat(TokenType.BEGIN_OBJECT);
 
-        while (currentToken.type != TokenType.END_OBJECT) {
-            // Key must be a STRING
-            if (currentToken.type != TokenType.STRING) {
-                throw new JsonParseException("Expected STRING as object key",
-                        currentToken.line, currentToken.column);
+        while (currentToken.getType() != TokenType.END_OBJECT) {
+            if (currentToken.getType() != TokenType.STRING) {
+                throw error("Expected STRING key in object");
             }
-            String key = currentToken.value;
+            String key = currentToken.getValue();
             eat(TokenType.STRING);
 
-            // After key, must be COLON
-            if (currentToken.type != TokenType.COLON) {
-                throw new JsonParseException("Missing ':' after key \"" + key + "\"",
-                        currentToken.line, currentToken.column);
+            if (currentToken.getType() != TokenType.COLON) {
+                throw error("Expected COLON after key");
             }
             eat(TokenType.COLON);
 
-            // Parse the value
             JsonValue value = parseValue();
             obj.put(key, value);
 
-            // After value, expect COMMA or END_OBJECT
-            if (currentToken.type == TokenType.COMMA) {
+            if (currentToken.getType() == TokenType.COMMA) {
                 eat(TokenType.COMMA);
-            } else if (currentToken.type != TokenType.END_OBJECT) {
-                throw new JsonParseException("Expected ',' or '}' after value for key \"" + key + "\"",
-                        currentToken.line, currentToken.column);
+            } else if (currentToken.getType() != TokenType.END_OBJECT) {
+                throw error("Expected COMMA or END_OBJECT");
             }
         }
+
         eat(TokenType.END_OBJECT);
         return obj;
     }
 
-
     private JsonArray parseArray() {
-        eat(TokenType.BEGIN_ARRAY);
         JsonArray arr = new JsonArray();
+        eat(TokenType.BEGIN_ARRAY);
 
-        while (currentToken.type != TokenType.END_ARRAY) {
-            JsonValue value = parseValue();
-            arr.add(value);
+        while (currentToken.getType() != TokenType.END_ARRAY) {
+            arr.add(parseValue());
 
-            if (currentToken.type == TokenType.COMMA) {
+            if (currentToken.getType() == TokenType.COMMA) {
                 eat(TokenType.COMMA);
-            } else if (currentToken.type != TokenType.END_ARRAY) {
-                throw new JsonParseException("Expected ',' or ']' in array",
-                        currentToken.line, currentToken.column);
+            } else if (currentToken.getType() != TokenType.END_ARRAY) {
+                throw error("Expected COMMA or END_ARRAY");
             }
         }
+
         eat(TokenType.END_ARRAY);
         return arr;
     }
-
 }
