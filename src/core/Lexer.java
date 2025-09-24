@@ -6,9 +6,15 @@ public class Lexer {
     private int line = 1;
     private int column = 0;
 
+    // Existing constructor
     public Lexer(String input, int pos) {
         this.input = input;
         this.pos = pos;
+    }
+
+    // New convenience constructor
+    public Lexer(String input) {
+        this(input, 0); // delegates to the two-argument constructor
     }
 
     private char currentChar() {

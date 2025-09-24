@@ -31,31 +31,33 @@ public class Parser {
 
     private JsonValue parseValue() {
         switch (currentToken.getType()) {
-            case BEGIN_OBJECT: return parseObject();
-            case BEGIN_ARRAY:  return parseArray();
+            case BEGIN_OBJECT:
+                return parseObject(); // returns JsonObject
+            case BEGIN_ARRAY:
+                return parseArray(); // returns JsonArray
             case STRING: {
                 String value = currentToken.getValue();
                 eat(TokenType.STRING);
-                return new JsonString(value);
+                return new JsonString(value); // returns JsonString
             }
             case NUMBER: {
                 String num = currentToken.getValue();
                 eat(TokenType.NUMBER);
-                return new JsonNumber(num);
+                return new JsonNumber(num); // returns JsonNumber
             }
             case BOOLEAN: {
                 String bool = currentToken.getValue();
                 eat(TokenType.BOOLEAN);
-                return new JsonBoolean(Boolean.parseBoolean(bool));
+                return new JsonBoolean(Boolean.parseBoolean(bool)); // returns JsonBoolean
             }
-            case NULL: {
+            case NULL:
                 eat(TokenType.NULL);
-                return new JsonNull();
-            }
+                return new JsonNull(); // returns JsonNull
             default:
                 throw error("Unexpected token " + currentToken.getType());
         }
     }
+
 
     private JsonObject parseObject() {
         JsonObject obj = new JsonObject();
@@ -65,6 +67,7 @@ public class Parser {
             if (currentToken.getType() != TokenType.STRING) {
                 throw error("Expected STRING key in object");
             }
+
             String key = currentToken.getValue();
             eat(TokenType.STRING);
 
@@ -73,7 +76,7 @@ public class Parser {
             }
             eat(TokenType.COLON);
 
-            JsonValue value = parseValue();
+            JsonValue value = parseValue(); // recursively parse value
             obj.put(key, value);
 
             if (currentToken.getType() == TokenType.COMMA) {
@@ -87,12 +90,14 @@ public class Parser {
         return obj;
     }
 
+
     private JsonArray parseArray() {
         JsonArray arr = new JsonArray();
         eat(TokenType.BEGIN_ARRAY);
 
         while (currentToken.getType() != TokenType.END_ARRAY) {
-            arr.add(parseValue());
+            JsonValue value = parseValue(); // recursively parse value
+            arr.add(value);
 
             if (currentToken.getType() == TokenType.COMMA) {
                 eat(TokenType.COMMA);

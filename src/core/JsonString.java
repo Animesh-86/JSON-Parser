@@ -6,6 +6,16 @@ public class JsonString extends JsonValue {
     public JsonString(String value) {
         this.value = value;
     }
+
+    @Override
+    protected String toJson(int indentFactor, int indentLevel){
+        return escapeString(value);
+    }
+
+    @Override
+    public String toString(){
+        return value;
+    }
 }
 
 
