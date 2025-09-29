@@ -2,7 +2,7 @@ package core;
 
 import java.math.BigDecimal;
 
-class JsonNumber extends JsonValue{
+public class JsonNumber extends JsonValue{
     private final BigDecimal value;
 
     public JsonNumber(String numericLiteral){

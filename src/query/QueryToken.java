@@ -1,32 +1,57 @@
 package query;
 
-public class QueryToken{
-    private final String key;    // key in JsonObject
-    private final Integer index; // index if JsonArray access; null if not an array
+public class QueryToken {
+    private final String key;    // key in JsonObject, can be null
+    private final Integer index; // index if JsonArray access; null if not
 
-    public QueryToken(String key, Integer index) {
+    // Case: key only
+    public QueryToken(String key) {
+        this.key = key;
+        this.index = null;
+    }
+
+    // Case: index only
+    public QueryToken(int index) {
+        this.key = null;
+        this.index = index;
+    }
+
+    // Case: key + index
+    public QueryToken(String key, int index) {
         this.key = key;
         this.index = index;
     }
 
-    public String getKey(){
+    public String getKey() {
         return key;
     }
 
-    public Integer getIndex(){
+    public Integer getIndex() {
         return index;
     }
 
-    public boolean isArrayAccess(){
+    public boolean isArrayAccess() {
         return index != null;
     }
 
+    public boolean isKeyOnly() {
+        return key != null && index == null;
+    }
+
+    public boolean isIndexOnly() {
+        return key == null && index != null;
+    }
+
     @Override
-    public String toString(){
-        if (isArrayAccess()){
-            return key + "[" + index + "]";
-        } else {
+    public String toString() {
+        if (isKeyOnly()) {
             return key;
+        } else if (isArrayAccess() && key != null) {
+            return key + "[" + index + "]";
+        } else if (isIndexOnly()) {
+            return "[" + index + "]";
+        } else {
+            return "InvalidToken";
         }
     }
 }

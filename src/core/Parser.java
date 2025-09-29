@@ -6,8 +6,8 @@ public class Parser {
     private Lexer lexer;
     private Token currentToken;
 
-    public Parser(Lexer lexer) {
-        this.lexer = lexer;
+    public Parser(String input) {
+        this.lexer = new Lexer(input);   // internally create the lexer
         this.currentToken = lexer.nextToken(); // initialize
     }
 

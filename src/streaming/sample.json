@@ -1,0 +1,11 @@
+{
+  "name": "Animesh",
+  "age": 20,
+  "skills": ["Java", "Spring Boot", "ML"],
+  "active": true,
+  "address": {
+    "city": "Indore",
+    "state": "MP"
+  },
+  "projects": null
+}
