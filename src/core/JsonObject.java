@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-class JsonObject extends JsonValue {
+public class JsonObject extends JsonValue {
 
     private final Map<String, JsonValue> members = new LinkedHashMap<>();
 
