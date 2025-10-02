@@ -1,70 +1,39 @@
-import exception.JsonParseException;
+package main;
+
 import core.*;
-import schema.JsonValidator;
-import schema.JsonSchema;
-
-
-import java.util.*;
+import diff.JsonDiff;
 
 public class Main {
     public static void main(String[] args) {
-        try {
-            // -------- JSON Object --------
-            JsonObject json = new JsonObject();
-            json.put("name", new JsonString("Animesh"));
-            json.put("age", new JsonNumber(20));
+        // -----------------------
+        // Example JSON 1
+        // -----------------------
+        JsonObject json1 = new JsonObject();
+        json1.put("id", new JsonPrimitive(1));
+        json1.put("name", new JsonPrimitive("Alice"));
+        JsonArray arr1 = new JsonArray();
+        arr1.add(new JsonPrimitive(true));
+        arr1.add(new JsonPrimitive(false));
+        json1.put("flags", arr1);
 
-            JsonObject contact = new JsonObject();
-            contact.put("email", new JsonString("animesh@example.com"));
-            contact.put("phone", new JsonString("1234567890"));
-            json.put("contact", contact);
+        // -----------------------
+        // Example JSON 2
+        // -----------------------
+        JsonObject json2 = new JsonObject();
+        json2.put("id", new JsonPrimitive(1)); // same
+        json2.put("name", new JsonPrimitive("Alicia")); // changed
+        JsonArray arr2 = new JsonArray();
+        arr2.add(new JsonPrimitive(true)); // same
+        json2.put("flags", arr2); // removed one element
+        json2.put("active", new JsonPrimitive(true)); // added key
 
-            JsonArray skills = new JsonArray();
-            skills.add(new JsonString("Java"));
-            skills.add(new JsonString("ML"));
-            json.put("skills", skills);
+        // -----------------------
+        // Run JSON Diff
+        // -----------------------
+        JsonDiff.DiffResult result = JsonDiff.diff(json1, json2);
 
-            JsonArray projects = new JsonArray();
-
-            JsonObject proj1 = new JsonObject();
-            proj1.put("title", new JsonString("Structo"));
-            proj1.put("durationMonths", new JsonNumber(6));
-
-            JsonObject proj2 = new JsonObject();
-            proj2.put("title", new JsonString("Expenzo"));
-            proj2.put("durationMonths", new JsonNumber(4));
-
-            projects.add(proj1);
-            projects.add(proj2);
-
-            json.put("projects", projects);
-
-            // -------- Schema --------
-            Map<String, Object> contactSchema = new HashMap<>();
-            contactSchema.put("email", "string");
-            contactSchema.put("phone", "string");
-
-            Map<String, Object> projectSchema = new HashMap<>();
-            projectSchema.put("title", "string");
-            projectSchema.put("durationMonths", "number");
-
-            Map<String, Object> schemaMap = new HashMap<>();
-            schemaMap.put("name", "string");
-            schemaMap.put("age", "number");
-            schemaMap.put("contact", contactSchema);
-            schemaMap.put("skills", List.of("string"));
-            schemaMap.put("projects", List.of(projectSchema));
-
-            JsonSchema schema = new JsonSchema(schemaMap);
-
-            // -------- Validation --------
-            JsonValidator.validate(json, schema.getSchemaRules());
-            System.out.println("Validation passed!");
-
-        } catch (JsonParseException e) {
-            System.err.println("Validation failed: " + e.getMessage());
-        }
+        // Pretty-print differences
+        System.out.println("JSON Diff Results:");
+        System.out.println(result.toPrettyString());
     }
 }
-
-
