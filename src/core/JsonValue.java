@@ -8,6 +8,9 @@ public abstract class JsonValue {
         return toJson(indentFactor, 0);
     }
 
+    // Indexed get
+    public abstract JsonValue get(String key);
+
     protected abstract String toJson(int indentFactor, int indentLevel);
 
     protected String indent(int indentFactor, int indentLevel){
