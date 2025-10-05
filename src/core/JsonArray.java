@@ -1,13 +1,28 @@
 package core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JsonArray extends JsonValue{
     private final List<JsonValue> values = new ArrayList<>();
 
-    public void add(JsonValue v){
-        values.add(v == null ? JsonNull.INSTANCE : v);
+    private final Map<String, JsonValue> idIndex = new HashMap<>();
+
+    public void add(JsonValue v) {
+        JsonValue value = v == null ? JsonNull.INSTANCE : v;
+        values.add(value);
+
+        // Auto-index if element is an object containing an "id" key
+        if (value instanceof JsonObject obj) {
+            if (obj.containsKey("id")) {
+                JsonValue idVal = obj.get("id");
+                if (idVal != null) {
+                    idIndex.put(idVal.toString(), obj);
+                }
+            }
+        }
     }
 
     public int size(){
@@ -16,6 +31,20 @@ public class JsonArray extends JsonValue{
 
     public JsonValue get(int i){
         return values.get(i);
+    }
+
+    public void rebuildIndex(){
+        idIndex.clear();
+        for(JsonValue v : values){
+            if(v instanceof JsonObject obj){
+                if(obj.containsKey("id")){
+                    JsonValue idVal = obj.get("id");
+                    if(idVal != null){
+                        idIndex.put(idVal.toString(), obj);
+                    }
+                }
+            }
+        }
     }
 
     @Override
