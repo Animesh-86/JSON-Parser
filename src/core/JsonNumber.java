@@ -2,17 +2,18 @@ package core;
 
 import java.math.BigDecimal;
 
-public class JsonNumber extends JsonValue{
+public class JsonNumber extends JsonValue {
     private final BigDecimal value;
 
-    public JsonNumber(String numericLiteral){
+    public JsonNumber(String numericLiteral) {
         this.value = new BigDecimal(numericLiteral);
     }
-    public JsonNumber(long v){
+
+    public JsonNumber(long v) {
         this.value = BigDecimal.valueOf(v);
     }
 
-    public JsonNumber(double v){
+    public JsonNumber(double v) {
         this.value = BigDecimal.valueOf(v);
     }
 
@@ -26,7 +27,10 @@ public class JsonNumber extends JsonValue{
         return value.toPlainString();
     }
 
-    @Override public String toString() { return value.toPlainString(); }
+    @Override
+    public String toString() {
+        return value.toPlainString();
+    }
 }
 
 

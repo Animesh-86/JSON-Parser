@@ -11,11 +11,11 @@ import java.util.List;
 public class JsonQuery {
     private final JsonValue root;
 
-    public JsonQuery(JsonValue root){
+    public JsonQuery(JsonValue root) {
         this.root = root;
     }
 
-    public JsonValue query(String query) throws JsonParseException{
+    public JsonValue query(String query) throws JsonParseException {
         List<QueryToken> tokens = parseQuery(query);
         return traverse(root, tokens);
     }

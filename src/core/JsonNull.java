@@ -8,12 +8,12 @@ public class JsonNull extends JsonValue {
     JsonNull() {}
 
     @Override
-    public JsonValue get(String key) {
+    public JsonValue get(String key){
         return null;
     }
 
     @Override
-    protected String toJson(int indentFactor, int indentLevel) {
+    protected String toJson(int indentFactor, int indentLevel){
         return "null";
     }
 }

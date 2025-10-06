@@ -3,6 +3,7 @@ package core;
 
 public class JsonString extends JsonValue {
     public String value;
+
     public JsonString(String value) {
         this.value = value;
     }
@@ -13,12 +14,12 @@ public class JsonString extends JsonValue {
     }
 
     @Override
-    protected String toJson(int indentFactor, int indentLevel){
+    protected String toJson(int indentFactor, int indentLevel) {
         return escapeString(value);
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return value;
     }
 }

@@ -3,7 +3,8 @@ package core;
 
 public class JsonBoolean extends JsonValue {
     private final boolean value;
-    public JsonBoolean(boolean value){
+
+    public JsonBoolean(boolean value) {
         this.value = value;
     }
 

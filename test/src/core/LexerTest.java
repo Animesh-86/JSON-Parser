@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class LexerTest {
 
     @Test
-    public void testStringToken(){
+    public void testStringToken() {
         Lexer lexer = new Lexer("\"hello\"");
         Token token = lexer.nextToken();
         assertEquals(TokenType.STRING, token.getType());
@@ -15,7 +15,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testNumberToken(){
+    public void testNumberToken() {
         Lexer lexer = new Lexer("123.45");
         Token token = lexer.nextToken();
         assertEquals(TokenType.NUMBER, token.getType());
@@ -23,7 +23,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testBooleanTokenTrue(){
+    public void testBooleanTokenTrue() {
         Lexer lexer = new Lexer("true");
         Token token = lexer.nextToken();
         assertEquals(TokenType.BOOLEAN, token.getType());
@@ -31,7 +31,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testNUllToken(){
+    public void testNUllToken() {
         Lexer lexer = new Lexer("null");
         Token token = lexer.nextToken();
         assertEquals(TokenType.NULL, token.getType());
