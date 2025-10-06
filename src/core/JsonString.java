@@ -8,6 +8,11 @@ public class JsonString extends JsonValue {
     }
 
     @Override
+    public JsonValue get(String key) {
+        return null;
+    }
+
+    @Override
     protected String toJson(int indentFactor, int indentLevel){
         return escapeString(value);
     }

@@ -8,6 +8,11 @@ public class JsonBoolean extends JsonValue {
     }
 
     @Override
+    public JsonValue get(String key) {
+        return null;
+    }
+
+    @Override
     protected String toJson(int indentFactor, int indentLevel) {
         return Boolean.toString(value);
     }
