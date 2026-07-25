@@ -1,0 +1,114 @@
+.custom-node {
+  background-color: #0d1117;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  width: 280px;
+  font-family: 'Fira Code', monospace, sans-serif;
+  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.custom-node.highlighted {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 10px var(--borderColor, #fff) inset;
+  transform: scale(1.02);
+}
+
+.custom-node-header {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: #ffffff;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #30363d;
+}
+
+.custom-node-type {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.custom-node-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-node-row {
+  display: flex;
+  padding: 4px 12px;
+  border-bottom: 1px solid #21262d;
+  font-size: 0.75rem;
+  position: relative;
+  align-items: center;
+}
+
+.custom-node-row:last-child {
+  border-bottom: none;
+}
+
+.custom-node-key {
+  color: #79c0ff;
+  width: 100px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+
+.custom-node-value {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-node-value.string { color: #a5d6ff; }
+.custom-node-value.number { color: #f0883e; }
+.custom-node-value.boolean { color: #ff7b72; }
+.custom-node-value.null { color: #ff7b72; opacity: 0.8; }
+.custom-node-value.object, .custom-node-value.array { 
+  color: #8b949e;
+  font-style: italic;
+}
+
+.react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background-color: transparent;
+  border: 1px solid #8b949e;
+}
+
+.react-flow__handle-right {
+  right: -4px;
+}
+
+.react-flow__handle-left {
+  left: -4px;
+}
+
+/* Dark mode controls styling */
+.react-flow__controls {
+  background-color: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-flow__controls-button {
+  background-color: transparent !important;
+  border-bottom: 1px solid #30363d !important;
+  fill: #c9d1d9 !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #21262d !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}

@@ -8,13 +8,20 @@ public class Lexer {
     private int line = 1;
     private int column = 0;
 
-    public Lexer(String input, int pos) {
+    private ParserConfig config;
+
+    public Lexer(String input, int pos, ParserConfig config) {
         this.input = input;
         this.pos = pos;
+        this.config = config != null ? config : ParserConfig.strict();
+    }
+
+    public Lexer(String input, ParserConfig config) {
+        this(input, 0, config);
     }
 
     public Lexer(String input) {
-        this(input, 0);
+        this(input, 0, ParserConfig.strict());
     }
 
     private char currentChar() {
@@ -32,7 +39,34 @@ public class Lexer {
     }
 
     private void skipWhiteSpace() {
-        while (Character.isWhitespace(currentChar())) advance();
+        while (true) {
+            if (Character.isWhitespace(currentChar())) {
+                advance();
+            } else if (config.isAllowComments() && currentChar() == '/') {
+                int peekPos = pos + 1;
+                char nextC = peekPos < input.length() ? input.charAt(peekPos) : '\0';
+                if (nextC == '/') {
+                    // Single line comment
+                    while (currentChar() != '\n' && currentChar() != '\0') {
+                        advance();
+                    }
+                } else if (nextC == '*') {
+                    // Multi-line comment
+                    advance(); advance(); // skip /*
+                    while (currentChar() != '\0') {
+                        if (currentChar() == '*' && (pos + 1 < input.length() && input.charAt(pos + 1) == '/')) {
+                            advance(); advance(); // skip */
+                            break;
+                        }
+                        advance();
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
     }
 
     public Token nextToken() {
@@ -61,15 +95,39 @@ public class Lexer {
                 advance();
                 return new Token(TokenType.COMMA, null, tokenLine, tokenColumn);
             case '"':
-                return stringToken();
+                return stringToken('"');
+            case '\'':
+                if (config.isAllowSingleQuotes()) return stringToken('\'');
+                throw new JsonParseException("Single quotes not allowed at line " + line + ", column " + column);
             case '\0':
                 return new Token(TokenType.EOF, null, tokenLine, tokenColumn);
             default:
-                if (c == '-' || Character.isDigit(c)) return numberToken();
+                if (c == '-' || c == '+' || Character.isDigit(c) || c == '.') return numberToken();
                 if (c == 't' || c == 'f') return booleanToken();
                 if (c == 'n') return nullToken();
+                if (c == 'I' || c == 'N') return numberToken(); // Infinity, NaN
+                if (config.isAllowUnquotedKeys() && isIdentifierStart(c)) return unquotedKeyToken();
                 throw new JsonParseException("Unexpected character '" + c + "' at line " + line + ", column " + column);
         }
+    }
+    
+    private boolean isIdentifierStart(char c) {
+        return Character.isLetter(c) || c == '_' || c == '$';
+    }
+    
+    private boolean isIdentifierPart(char c) {
+        return isIdentifierStart(c) || Character.isDigit(c);
+    }
+    
+    private Token unquotedKeyToken() {
+        int tokenLine = line;
+        int tokenColumn = column;
+        StringBuilder sb = new StringBuilder();
+        while (isIdentifierPart(currentChar())) {
+            sb.append(currentChar());
+            advance();
+        }
+        return new Token(TokenType.STRING, sb.toString(), tokenLine, tokenColumn);
     }
 
     private Token nullToken() {
@@ -102,11 +160,45 @@ public class Lexer {
     private Token numberToken() {
         int tokenLine = line;
         int tokenColumn = column;
+        
+        if (config.isAllowJson5Numbers()) {
+            if (input.startsWith("Infinity", pos)) {
+                pos += 8; column += 8;
+                return new Token(TokenType.NUMBER, "Infinity", tokenLine, tokenColumn);
+            }
+            if (input.startsWith("-Infinity", pos)) {
+                pos += 9; column += 9;
+                return new Token(TokenType.NUMBER, "-Infinity", tokenLine, tokenColumn);
+            }
+            if (input.startsWith("+Infinity", pos)) {
+                pos += 9; column += 9;
+                return new Token(TokenType.NUMBER, "Infinity", tokenLine, tokenColumn);
+            }
+            if (input.startsWith("NaN", pos)) {
+                pos += 3; column += 3;
+                return new Token(TokenType.NUMBER, "NaN", tokenLine, tokenColumn);
+            }
+            if (currentChar() == '+' || currentChar() == '-') {
+                advance(); // JSON5 supports + and - for NaN and Infinity, though NaN with sign is rare
+                if (input.startsWith("NaN", pos - 1)) { /* ... */ } // Handled loosely for now
+            }
+        }
+        
         StringBuilder sb = new StringBuilder();
         
-        if (currentChar() == '-') {
+        if (currentChar() == '-' || (config.isAllowJson5Numbers() && currentChar() == '+')) {
             sb.append(currentChar());
             advance();
+        }
+        
+        if (config.isAllowJson5Numbers() && currentChar() == '0' && (pos + 1 < input.length() && (input.charAt(pos + 1) == 'x' || input.charAt(pos + 1) == 'X'))) {
+            sb.append("0x");
+            advance(); advance();
+            while (isHexDigit(currentChar())) {
+                sb.append(currentChar());
+                advance();
+            }
+            return new Token(TokenType.NUMBER, sb.toString(), tokenLine, tokenColumn);
         }
         
         if (currentChar() == '0') {
@@ -117,14 +209,15 @@ public class Lexer {
                 sb.append(currentChar());
                 advance();
             }
-        } else {
+        } else if (!(config.isAllowJson5Numbers() && currentChar() == '.')) { // JSON5 allows numbers starting with .
             throw new JsonParseException("Invalid number format at line " + tokenLine + ", column " + tokenColumn);
         }
         
         if (currentChar() == '.') {
             sb.append(currentChar());
             advance();
-            if (!Character.isDigit(currentChar())) {
+            // JSON5 allows trailing dot (e.g., 1.)
+            if (!Character.isDigit(currentChar()) && !config.isAllowJson5Numbers()) {
                 throw new JsonParseException("Invalid fraction in number at line " + tokenLine + ", column " + tokenColumn);
             }
             while (Character.isDigit(currentChar())) {
@@ -151,13 +244,17 @@ public class Lexer {
         
         return new Token(TokenType.NUMBER, sb.toString(), tokenLine, tokenColumn);
     }
+    
+    private boolean isHexDigit(char c) {
+        return Character.isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
 
-    private Token stringToken() {
+    private Token stringToken(char quoteChar) {
         int tokenLine = line;
         int tokenColumn = column;
         advance(); // skip opening quote
         StringBuilder sb = new StringBuilder();
-        while (currentChar() != '"' && currentChar() != '\0') {
+        while (currentChar() != quoteChar && currentChar() != '\0') {
             if (currentChar() == '\\') {
                 advance(); // skip backslash
                 switch (currentChar()) {

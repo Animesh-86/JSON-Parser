@@ -8,9 +8,16 @@ public class Parser {
     private static final int MAX_DEPTH = 512;
     private int depth = 0;
 
+    private ParserConfig config;
+
+    public Parser(String input, ParserConfig config) {
+        this.config = config != null ? config : ParserConfig.strict();
+        this.lexer = new Lexer(input, this.config);
+        this.currentToken = lexer.nextToken();
+    }
+
     public Parser(String input) {
-        this.lexer = new Lexer(input);   // internally create the lexer
-        this.currentToken = lexer.nextToken(); // initialize
+        this(input, ParserConfig.strict());
     }
 
     private void eat(TokenType expected) {
@@ -95,7 +102,9 @@ public class Parser {
             if (currentToken.getType() == TokenType.COMMA) {
                 eat(TokenType.COMMA);
                 if (currentToken.getType() == TokenType.END_OBJECT) {
-                    System.err.println("Warning: Trailing comma in object at line " + currentToken.getLine() + ", column " + currentToken.getColumn());
+                    if (!config.isAllowTrailingCommas()) {
+                        System.err.println("Warning: Trailing comma in object at line " + currentToken.getLine() + ", column " + currentToken.getColumn());
+                    }
                     break;
                 }
             } else if (currentToken.getType() != TokenType.END_OBJECT) {
@@ -119,7 +128,9 @@ public class Parser {
             if (currentToken.getType() == TokenType.COMMA) {
                 eat(TokenType.COMMA);
                 if (currentToken.getType() == TokenType.END_ARRAY) {
-                    System.err.println("Warning: Trailing comma in array at line " + currentToken.getLine() + ", column " + currentToken.getColumn());
+                    if (!config.isAllowTrailingCommas()) {
+                        System.err.println("Warning: Trailing comma in array at line " + currentToken.getLine() + ", column " + currentToken.getColumn());
+                    }
                     break;
                 }
             } else if (currentToken.getType() != TokenType.END_ARRAY) {

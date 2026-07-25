@@ -9,7 +9,21 @@ public class JsonNumber extends JsonValue {
 
     public JsonNumber(String value) {
         this.value = value;
-        this.decimalValue = new BigDecimal(value);
+        BigDecimal temp = null;
+        try {
+            if (value.equals("Infinity") || value.equals("+Infinity") || value.equals("-Infinity") || value.equals("NaN")) {
+                temp = null; // Cannot store as BigDecimal
+            } else if (value.startsWith("0x") || value.startsWith("0X")) {
+                temp = new BigDecimal(Long.parseLong(value.substring(2), 16));
+            } else if (value.startsWith("+")) {
+                temp = new BigDecimal(value.substring(1));
+            } else {
+                temp = new BigDecimal(value);
+            }
+        } catch (NumberFormatException e) {
+            temp = null;
+        }
+        this.decimalValue = temp;
     }
     
     public String getValue() {
@@ -17,11 +31,18 @@ public class JsonNumber extends JsonValue {
     }
     
     public int intValue() {
-        return decimalValue.intValue();
+        if (decimalValue != null) return decimalValue.intValue();
+        if (value.startsWith("0x") || value.startsWith("0X")) return Integer.parseInt(value.substring(2), 16);
+        return (int) doubleValue();
     }
     
     public double doubleValue() {
-        return decimalValue.doubleValue();
+        if (decimalValue != null) return decimalValue.doubleValue();
+        if (value.equals("Infinity") || value.equals("+Infinity")) return Double.POSITIVE_INFINITY;
+        if (value.equals("-Infinity")) return Double.NEGATIVE_INFINITY;
+        if (value.equals("NaN")) return Double.NaN;
+        if (value.startsWith("0x") || value.startsWith("0X")) return (double) Long.parseLong(value.substring(2), 16);
+        return Double.parseDouble(value);
     }
     
     public BigDecimal bigDecimalValue() {
@@ -43,12 +64,15 @@ public class JsonNumber extends JsonValue {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JsonNumber that = (JsonNumber) o;
-        return decimalValue.compareTo(that.decimalValue) == 0;
+        if (this.decimalValue != null && that.decimalValue != null) {
+            return decimalValue.compareTo(that.decimalValue) == 0;
+        }
+        return this.value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        // Strip trailing zeros for consistent hashcode across scales
-        return decimalValue.stripTrailingZeros().hashCode();
+        if (decimalValue != null) return decimalValue.stripTrailingZeros().hashCode();
+        return value.hashCode();
     }
 }
