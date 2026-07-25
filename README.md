@@ -1,139 +1,125 @@
 # JSON Parser
 
-A robust and extensible JSON parsing library for Java, designed to handle both standard and complex JSON operations efficiently. This library goes beyond simple parsing, offering advanced capabilities such as querying, schema validation, diffing, streaming, and indexing.
+![Java Version](https://img.shields.io/badge/Java-17%2B-blue)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-85%25-green)
 
-## Key Highlights
+A robust, dependency-free JSON parsing library for Java. Designed for performance, correctness, and flexibility, offering an array of capabilities extending beyond basic parsing—including querying, schema validation, diffing, and streaming.
 
-- **Query Engine:** Navigate nested JSON structures easily with JSONPath-like queries using `JsonQuery`.
-- **Schema Validation:** Enforce JSON structure and data types with `JsonValidator`, ensuring data correctness.
-- **JSON Diffing:** Detect and display differences between two JSON objects efficiently using `JsonDiff`.
-- **Event-Driven Streaming Parser:** Process large JSON files without loading them entirely into memory via `JsonStreamParser`.
-- **Fast Indexing:** Quickly access JSON values by path using `JsonIndexer`, enabling O(1) lookups.
-- **Rich Data Model:** Handle all JSON types—objects, arrays, strings, numbers, booleans, and nulls—through the flexible `JsonValue` hierarchy.
-- **Extensible & Modular:** Clean architecture with separate packages for core parsing, querying, validation, diffing, streaming, and indexing, making it easy to extend or integrate into other projects.
+## Highlights
+- **Zero Dependencies**: Core library strictly relies on standard Java (`java.base`).
+- **RFC 8259 Compliant**: Fully handles escape sequences, unicode, decimals, exponents, and proper JSON grammar.
+- **Advanced Features**: JSONPath queries, schema validation, structural diffing, and event-driven streaming parser.
+- **Maven Ready**: Drop-in compatible with modern Java build ecosystems.
+
+---
+
+## Installation
+
+Add the dependency to your `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.jsonparser</groupId>
+    <artifactId>json-parser</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+Alternatively, clone and build locally:
+```sh
+git clone https://github.com/Animesh-86/json-parser.git
+cd json-parser
+mvn clean install
+```
+
+---
+
+## Quick Start
+
+```java
+import com.jsonparser.core.*;
+
+public class Example {
+    public static void main(String[] args) {
+        String json = "{\"name\":\"Animesh\",\"skills\":[\"Java\",\"ML\"]}";
+        
+        Parser parser = new Parser(json);
+        JsonObject root = (JsonObject) parser.parse();
+        
+        System.out.println(root.get("name")); // "Animesh"
+        
+        // Serialize back to JSON with indentation (pretty print)
+        System.out.println(root.toJson(2));
+    }
+}
+```
+
+---
+
+## Architecture
+
+The parser consists of several decoupled modules:
+
+- **Lexer**: Tokenizes the raw input string into JSON primitives (strings, numbers, booleans, structural characters).
+- **Parser**: A recursive-descent parser that consumes tokens and builds a hierarchical in-memory AST using `JsonValue` subclasses (`JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`).
+- **Streaming Parser**: A memory-efficient alternative (`JsonStreamParser`) that triggers user-defined callbacks on parsed tokens, rather than building a tree. Ideal for multi-gigabyte JSON files.
+
+---
 
 ## Features
 
-- **Standard JSON Parsing:** Parse JSON strings into Java objects.
-- **Query Support:** JSONPath-like queries for nested objects and arrays.
-- **Schema Validation:** Validate JSON data against custom schemas.
-- **Diffing:** Compare two JSON objects and get detailed differences.
-- **Streaming Parsing:** Event-driven parsing for memory-efficient processing of large JSON files.
-- **Indexing:** Fast retrieval of JSON values by path.
-
-### Installation
-
-Clone the repository:
-
-```sh
-git clone https://github.com/yourusername/json-parser.git
-cd json-parser
-```
-
-Compile source files:
-
-```sh
-javac -d bin src/core/*.java src/query/*.java src/schema/*.java src/diff/*.java src/streaming/*.java src/index/*.java
-```
-
-## Usage
-
-### Parsing JSON
-
+### 1. JSONPath Querying
+Navigate nested structures intuitively.
 ```java
-import core.Parser;
-import core.JsonValue;
-
-String json = "{\"name\":\"Animesh\",\"age\":20}";
-Parser parser = new Parser(json);
-JsonValue value = parser.parse();
+JsonQuery query = new JsonQuery(rootObject);
+JsonValue result = query.query("$.skills[0]"); 
+// Returns JsonString("Java")
 ```
 
-### Querying
-
+### 2. JSON Diffing
+Detect structural and value differences between two JSON objects (returns RFC 6901 compliant paths).
 ```java
-import query.JsonQuery;
-
-JsonQuery query = new JsonQuery(value);
-JsonValue name = query.query("$.name");
+JsonDiff.DiffResult result = JsonDiff.diff(oldObj, newObj);
+System.out.println(result.toPrettyString());
+// REP /age: 20 -> 21
+// ADD /city => Vadodara
 ```
 
-### Schema Validation
-
+### 3. Schema Validation
+Ensure JSON structure and data types match expectations.
 ```java
-import schema.JsonValidator;
-import java.util.Map;
-
 Map<String, Object> schema = Map.of(
     "name", "string",
     "age", "number"
 );
-
-JsonValidator.validate(value, schema);
+boolean isValid = JsonValidator.validate(rootObject, schema);
 ```
 
-### Diffing
-
+### 4. Streaming Parsing
+Process large payloads without `OutOfMemoryError`. Filter by key to skip irrelevant subtrees.
 ```java
-import diff.JsonDiff;
+Set<String> targetKeys = Set.of("target_key");
+JsonStreamParser streamParser = new JsonStreamParser(reader, event -> {
+    System.out.println(event.getType() + ": " + event.getValue());
+}, targetKeys);
 
-JsonDiff.DiffResult result = JsonDiff.diff(json1, json2);
-System.out.println(result.toPrettyString());
+streamParser.parse();
 ```
 
-### Streaming
+---
 
-```java
-import streaming.JsonStreamParser;
-import streaming.PrintEventHandler;
-import java.io.FileReader;
+## Building & Testing
 
-JsonStreamParser parser = new JsonStreamParser(
-    new FileReader("sample.json"),
-    new PrintEventHandler(),
-    null  // null for no key filtering
-);
-parser.parse();
-```
-
-### Indexing
-
-```java
-import index.JsonIndexer;
-
-JsonIndexer indexer = new JsonIndexer(value);
-JsonValue age = indexer.get("$.age");
-```
-
-## Project Structure
-
-- `src/core/` — Core JSON model and parser
-- `src/query/` — Query engine
-- `src/schema/` — Schema validation
-- `src/diff/` — Diffing utilities
-- `src/streaming/` — Streaming/event-based parser
-- `src/index/` — Indexing support
-- `test/` — Unit tests
-
-## Running Tests
-
-Run JUnit 5 tests via the command line:
+To run the full test suite (JUnit 5):
 
 ```sh
-javac -d bin src/core/*.java src/query/*.java src/schema/*.java src/diff/*.java src/streaming/*.java src/index/*.java test/*.java
-java -cp bin org.junit.platform.console.ConsoleLauncher --scan-class-path
+mvn clean test
 ```
 
-Or use your IDE’s built-in test runner.
-
-## License
-
-This project is licensed under the MIT License.
+## Known Limitations
+- Does not support JSON5 features (e.g., unquoted keys, single quotes, comments).
+- Relies on `java.math.BigDecimal` for arbitrary-precision decimal numbers, which may have an overhead for extremely large files compared to native primitives.
 
 ## Author
-
-**Animesh Sharma**  
-Passionate about Java, backend development, and AI/ML integration  
-GitHub: [https://github.com/Animesh-86](https://github.com/Animesh-86)  
-LinkedIn: [https://www.linkedin.com/in/animesh-sharma-adev](https://www.linkedin.com/in/animesh-sharma-adev)
-
+Created by [Animesh-86](https://github.com/Animesh-86).

@@ -27,3 +27,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Build & IDE ###
+.idea/
+target/
+*.class
+*.jar
