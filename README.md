@@ -59,11 +59,65 @@ public class Example {
 
 ## Architecture
 
-The parser consists of several decoupled modules:
+The parser is designed around a classic two-pass compiler frontend architecture, decoupled into specific modules for maintainability and extensibility.
 
-- **Lexer**: Tokenizes the raw input string into JSON primitives (strings, numbers, booleans, structural characters).
-- **Parser**: A recursive-descent parser that consumes tokens and builds a hierarchical in-memory AST using `JsonValue` subclasses (`JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`).
+### 1. Data Flow
+
+```mermaid
+graph LR
+    A[Raw JSON String] -->|Tokenizes| B(Lexer)
+    B -->|Produces| C[Token Stream]
+    C -->|Consumes| D(Parser)
+    D -->|Builds| E[JsonValue AST]
+    E -->|Queried via| F(JsonQuery)
+    E -->|Diffed via| G(JsonDiff)
+```
+
+### 2. Core Modules
+
+- **Lexer**: Tokenizes the raw input string into JSON primitives (strings, numbers, booleans, structural characters). It handles all JSON whitespace, unicode escapes, and validation of raw literals.
+- **Parser**: A recursive-descent parser that consumes tokens from the Lexer and builds a hierarchical in-memory Abstract Syntax Tree (AST) using `JsonValue` subclasses.
 - **Streaming Parser**: A memory-efficient alternative (`JsonStreamParser`) that triggers user-defined callbacks on parsed tokens, rather than building a tree. Ideal for multi-gigabyte JSON files.
+
+### 3. Class Hierarchy
+
+All JSON data types inherit from the abstract base class `JsonValue`.
+
+```mermaid
+classDiagram
+    class JsonValue {
+        <<abstract>>
+        +toJson(indent) String
+    }
+    class JsonObject {
+        +put(String, JsonValue)
+        +get(String) JsonValue
+    }
+    class JsonArray {
+        +add(JsonValue)
+        +get(int) JsonValue
+    }
+    class JsonString {
+        +getValue() String
+    }
+    class JsonNumber {
+        +getValue() String
+        +doubleValue() double
+    }
+    class JsonBoolean {
+        +getValue() boolean
+    }
+    class JsonNull {
+        +INSTANCE
+    }
+    
+    JsonValue <|-- JsonObject
+    JsonValue <|-- JsonArray
+    JsonValue <|-- JsonString
+    JsonValue <|-- JsonNumber
+    JsonValue <|-- JsonBoolean
+    JsonValue <|-- JsonNull
+```
 
 ---
 
