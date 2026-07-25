@@ -8,8 +8,9 @@ A robust, dependency-free JSON parsing library for Java. Designed for performanc
 
 ## Highlights
 - **Zero Dependencies**: Core library strictly relies on standard Java (`java.base`).
-- **RFC 8259 Compliant**: Fully handles escape sequences, unicode, decimals, exponents, and proper JSON grammar.
-- **Advanced Features**: JSONPath queries, schema validation, structural diffing, and event-driven streaming parser.
+- **RFC 8259 Compliant & JSON5 Support**: Handles standard JSON as well as JSON5 features (comments, single quotes, unquoted keys, NaN, Infinity).
+- **Advanced Features**: Data Binding/Object Mapping, JSONPath queries, schema validation, structural diffing, and zero-allocation streaming.
+- **Visualizer**: Includes a stunning, interactive React Flow-based Node Graph Visualizer.
 - **Maven Ready**: Drop-in compatible with modern Java build ecosystems.
 
 ---
@@ -150,15 +151,38 @@ Map<String, Object> schema = Map.of(
 boolean isValid = JsonValidator.validate(rootObject, schema);
 ```
 
-### 4. Streaming Parsing
-Process large payloads without `OutOfMemoryError`. Filter by key to skip irrelevant subtrees.
+### 4. JSON5 Support
+Parse human-readable JSON5 configuration files with ease.
 ```java
-Set<String> targetKeys = Set.of("target_key");
-JsonStreamParser streamParser = new JsonStreamParser(reader, event -> {
-    System.out.println(event.getType() + ": " + event.getValue());
-}, targetKeys);
+ParserConfig config = new ParserConfig.Builder().enableJson5(true).build();
+Parser parser = new Parser("{ name: 'Animesh', /* comment */ hex: 0xFF }", config);
+```
 
-streamParser.parse();
+### 5. Object Mapping / Data Binding
+Map JSON directly to your Java POJOs using reflection, supported by `@JsonName` and `@JsonIgnore` annotations.
+```java
+JsonMapper mapper = new JsonMapper();
+User user = mapper.readValue(rootObject, User.class);
+```
+
+### 6. Zero-Allocation Streaming
+Achieve maximum throughput for multi-gigabyte JSON files using a shared `char[]` buffer that prevents object allocation and GC pauses.
+```java
+ZeroAllocStreamParser parser = new ZeroAllocStreamParser(reader);
+while (parser.hasNext()) {
+    JsonToken token = parser.nextToken();
+    if (token == JsonToken.STRING) {
+        CharSequence value = parser.getText(); // Direct buffer slice
+    }
+}
+```
+
+### 7. Node Graph Visualizer
+A modern web application built with React, Vite, and React Flow to visualize JSON payloads as stunning node-based diagrams. 
+Includes Live Parsing, Search Highlighting, Interactive Zoom, and PNG Exports.
+```sh
+cd visualizer
+npm run dev
 ```
 
 ---
@@ -172,7 +196,6 @@ mvn clean test
 ```
 
 ## Known Limitations
-- Does not support JSON5 features (e.g., unquoted keys, single quotes, comments).
 - Relies on `java.math.BigDecimal` for arbitrary-precision decimal numbers, which may have an overhead for extremely large files compared to native primitives.
 
 ## Author
