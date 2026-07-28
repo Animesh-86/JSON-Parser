@@ -10,7 +10,7 @@ A robust, dependency-free JSON parsing library and REST API service for Java, ac
 
 ---
 
-## 🌟 Highlights
+## Highlights
 - **Zero Core Dependencies**: Core library strictly relies on standard Java (`java.base`).
 - **RFC 8259 Compliant & JSON5 Support**: Handles standard JSON as well as JSON5 features (comments, single quotes, unquoted keys, hex numbers, trailing commas).
 - **Interactive React Visualizer**: Live web application deployed on Vercel, powered 100% by the custom Java Parser backend deployed on Render.
@@ -20,24 +20,24 @@ A robust, dependency-free JSON parsing library and REST API service for Java, ac
 
 ---
 
-## 🌐 Live Demos
+## Live Demos
 - **Visualizer App**: [json-parser-sooty.vercel.app](https://json-parser-sooty.vercel.app)
 - **Backend Health Check**: [json-parser-api.onrender.com/health](https://json-parser-api.onrender.com/health)
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## Architecture & Data Flow
 
 The project consists of a high-performance Java compiler frontend (Lexer + Recursive Descent Parser) exposed as a REST API and visualized through a React Node Graph frontend.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as 👤 Developer / User
-    participant React as 💻 React Visualizer (Vercel)
-    participant Server as ☕ Java REST API (Render Docker)
-    participant Engine as ⚙️ Custom Lexer & Parser
-    participant AST as 🌳 JsonValue AST
+    actor User as Developer / User
+    participant React as React Visualizer (Vercel)
+    participant Server as Java REST API (Render Docker)
+    participant Engine as Custom Lexer & Parser
+    participant AST as JsonValue AST
 
     User->>React: Input JSON / JSON5
     React->>Server: POST /api/parse (HTTP REST)
@@ -50,7 +50,7 @@ sequenceDiagram
 
 ---
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### 1. Maven Dependency
 Add the dependency to your `pom.xml`:
@@ -72,7 +72,7 @@ mvn clean install
 
 ---
 
-## ⚡ Quick Start (Java Code)
+## Quick Start (Java Code)
 
 ```java
 import com.jsonparser.core.*;
@@ -95,7 +95,7 @@ public class Example {
 
 ---
 
-## 🛠️ Features & Usage
+## Features & Usage
 
 ### 1. JSONPath Querying
 Navigate nested structures intuitively:
@@ -152,7 +152,7 @@ while (parser.hasNext()) {
 
 ---
 
-## 🚀 REST API Endpoints & Docker Deployment
+## REST API Endpoints & Docker Deployment
 
 The Java project includes a built-in zero-dependency HTTP server ([Server.java](file:///c:/CipherVault/Code/Projects/JSON%20Parser/json_parser/src/main/java/com/jsonparser/server/Server.java)).
 
@@ -173,7 +173,7 @@ docker run -p 8080:8080 json-parser-api
 
 ---
 
-## 🎨 Node Graph Visualizer (React Web App)
+## Node Graph Visualizer (React Web App)
 
 Located in the [visualizer](file:///c:/CipherVault/Code/Projects/JSON%20Parser/json_parser/visualizer) directory. Built with **React 19**, **Vite**, **TypeScript**, and **React Flow** (`@xyflow/react`).
 
@@ -188,7 +188,7 @@ npm run dev
 
 ---
 
-## 🧪 Building & Testing
+## Building & Testing
 
 To execute the unit test suite (30+ tests passing):
 
@@ -198,5 +198,5 @@ mvn clean test
 
 ---
 
-## 👨‍💻 Author
-Created with ❤️ by **[Animesh Sharma](https://github.com/Animesh-86)**.
+## Author
+Created by **[Animesh Sharma](https://github.com/Animesh-86)**.
