@@ -62,7 +62,7 @@ public class Server {
 
             try {
                 String requestBody = readStream(exchange.getRequestBody());
-                Parser parser = new Parser(requestBody);
+                Parser parser = new Parser(requestBody, com.jsonparser.core.ParserConfig.json5());
                 JsonValue parsed = parser.parse();
                 sendResponse(exchange, 200, parsed.toJson(2));
             } catch (Exception e) {
