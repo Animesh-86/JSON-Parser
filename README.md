@@ -1,22 +1,58 @@
-# JSON Parser
+# JSON Parser & Node Graph Visualizer
 
-![Java Version](https://img.shields.io/badge/Java-17%2B-blue)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-85%25-green)
+[![Java Version](https://img.shields.io/badge/Java-17%2B-blue)](https://jdk.java.net/17/)
+[![Live Visualizer](https://img.shields.io/badge/Live%20Demo-Vercel-brightgreen)](https://json-parser-sooty.vercel.app)
+[![API Backend](https://img.shields.io/badge/API%20Backend-Render-blue)](https://json-parser-api.onrender.com/health)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](Dockerfile)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#building--testing)
 
-A robust, dependency-free JSON parsing library for Java. Designed for performance, correctness, and flexibility, offering an array of capabilities extending beyond basic parsing—including querying, schema validation, diffing, and streaming.
-
-## Highlights
-- **Zero Dependencies**: Core library strictly relies on standard Java (`java.base`).
-- **RFC 8259 Compliant & JSON5 Support**: Handles standard JSON as well as JSON5 features (comments, single quotes, unquoted keys, NaN, Infinity).
-- **Advanced Features**: Data Binding/Object Mapping, JSONPath queries, schema validation, structural diffing, and zero-allocation streaming.
-- **Visualizer**: Includes a stunning, interactive React Flow-based Node Graph Visualizer.
-- **Maven Ready**: Drop-in compatible with modern Java build ecosystems.
+A robust, dependency-free JSON parsing library and REST API service for Java, accompanied by a modern **React Flow Node Graph Visualizer**. Designed for performance, correctness, and flexibility, offering an array of capabilities extending beyond basic parsing—including querying, schema validation, diffing, zero-allocation streaming, and live visualization.
 
 ---
 
-## Installation
+## 🌟 Highlights
+- **Zero Core Dependencies**: Core library strictly relies on standard Java (`java.base`).
+- **RFC 8259 Compliant & JSON5 Support**: Handles standard JSON as well as JSON5 features (comments, single quotes, unquoted keys, hex numbers, trailing commas).
+- **Interactive React Visualizer**: Live web application deployed on Vercel, powered 100% by the custom Java Parser backend deployed on Render.
+- **Built-in REST API Server**: Zero-dependency HTTP REST API containerized with Docker (`/api/parse`, `/api/diff`, `/health`).
+- **Advanced Features**: Data Binding / Object Mapping, JSONPath queries, schema validation, structural diffing, and zero-allocation streaming.
+- **Maven & Docker Ready**: Easily deployable to any cloud platform (Render, Railway, AWS, Docker).
 
+---
+
+## 🌐 Live Demos
+- **Visualizer App**: [json-parser-sooty.vercel.app](https://json-parser-sooty.vercel.app)
+- **Backend Health Check**: [json-parser-api.onrender.com/health](https://json-parser-api.onrender.com/health)
+
+---
+
+## 🏗️ Architecture & Data Flow
+
+The project consists of a high-performance Java compiler frontend (Lexer + Recursive Descent Parser) exposed as a REST API and visualized through a React Node Graph frontend.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Developer / User
+    participant React as 💻 React Visualizer (Vercel)
+    participant Server as ☕ Java REST API (Render Docker)
+    participant Engine as ⚙️ Custom Lexer & Parser
+    participant AST as 🌳 JsonValue AST
+
+    User->>React: Input JSON / JSON5
+    React->>Server: POST /api/parse (HTTP REST)
+    Server->>Engine: Tokenize & Parse (ParserConfig.json5())
+    Engine->>AST: Build JsonValue Abstract Syntax Tree
+    AST-->>Server: Return AST Representation
+    Server-->>React: HTTP 200 OK JSON Payload
+    React-->>User: Render Interactive Node Graph
+```
+
+---
+
+## 📦 Installation & Setup
+
+### 1. Maven Dependency
 Add the dependency to your `pom.xml`:
 
 ```xml
@@ -29,14 +65,14 @@ Add the dependency to your `pom.xml`:
 
 Alternatively, clone and build locally:
 ```sh
-git clone https://github.com/Animesh-86/json-parser.git
-cd json-parser
+git clone https://github.com/Animesh-86/JSON-Parser.git
+cd JSON-Parser
 mvn clean install
 ```
 
 ---
 
-## Quick Start
+## ⚡ Quick Start (Java Code)
 
 ```java
 import com.jsonparser.core.*;
@@ -45,12 +81,13 @@ public class Example {
     public static void main(String[] args) {
         String json = "{\"name\":\"Animesh\",\"skills\":[\"Java\",\"ML\"]}";
         
+        // Initialize parser
         Parser parser = new Parser(json);
         JsonObject root = (JsonObject) parser.parse();
         
         System.out.println(root.get("name")); // "Animesh"
         
-        // Serialize back to JSON with indentation (pretty print)
+        // Serialize back to JSON with 2-space indentation (pretty print)
         System.out.println(root.toJson(2));
     }
 }
@@ -58,82 +95,18 @@ public class Example {
 
 ---
 
-## Architecture
-
-The parser is designed around a classic two-pass compiler frontend architecture, decoupled into specific modules for maintainability and extensibility.
-
-### 1. Data Flow
-
-```mermaid
-graph LR
-    A[Raw JSON String] -->|Tokenizes| B(Lexer)
-    B -->|Produces| C[Token Stream]
-    C -->|Consumes| D(Parser)
-    D -->|Builds| E[JsonValue AST]
-    E -->|Queried via| F(JsonQuery)
-    E -->|Diffed via| G(JsonDiff)
-```
-
-### 2. Core Modules
-
-- **Lexer**: Tokenizes the raw input string into JSON primitives (strings, numbers, booleans, structural characters). It handles all JSON whitespace, unicode escapes, and validation of raw literals.
-- **Parser**: A recursive-descent parser that consumes tokens from the Lexer and builds a hierarchical in-memory Abstract Syntax Tree (AST) using `JsonValue` subclasses.
-- **Streaming Parser**: A memory-efficient alternative (`JsonStreamParser`) that triggers user-defined callbacks on parsed tokens, rather than building a tree. Ideal for multi-gigabyte JSON files.
-
-### 3. Class Hierarchy
-
-All JSON data types inherit from the abstract base class `JsonValue`.
-
-```mermaid
-classDiagram
-    class JsonValue {
-        <<abstract>>
-        +toJson(indent) String
-    }
-    class JsonObject {
-        +put(String, JsonValue)
-        +get(String) JsonValue
-    }
-    class JsonArray {
-        +add(JsonValue)
-        +get(int) JsonValue
-    }
-    class JsonString {
-        +getValue() String
-    }
-    class JsonNumber {
-        +getValue() String
-        +doubleValue() double
-    }
-    class JsonBoolean {
-        +getValue() boolean
-    }
-    class JsonNull {
-        +INSTANCE
-    }
-    
-    JsonValue <|-- JsonObject
-    JsonValue <|-- JsonArray
-    JsonValue <|-- JsonString
-    JsonValue <|-- JsonNumber
-    JsonValue <|-- JsonBoolean
-    JsonValue <|-- JsonNull
-```
-
----
-
-## Features
+## 🛠️ Features & Usage
 
 ### 1. JSONPath Querying
-Navigate nested structures intuitively.
+Navigate nested structures intuitively:
 ```java
 JsonQuery query = new JsonQuery(rootObject);
 JsonValue result = query.query("$.skills[0]"); 
 // Returns JsonString("Java")
 ```
 
-### 2. JSON Diffing
-Detect structural and value differences between two JSON objects (returns RFC 6901 compliant paths).
+### 2. Structural JSON Diffing (RFC 6901)
+Detect structural and value differences between two JSON objects:
 ```java
 JsonDiff.DiffResult result = JsonDiff.diff(oldObj, newObj);
 System.out.println(result.toPrettyString());
@@ -142,7 +115,7 @@ System.out.println(result.toPrettyString());
 ```
 
 ### 3. Schema Validation
-Ensure JSON structure and data types match expectations.
+Ensure JSON structure and data types match expectations:
 ```java
 Map<String, Object> schema = Map.of(
     "name", "string",
@@ -151,22 +124,22 @@ Map<String, Object> schema = Map.of(
 boolean isValid = JsonValidator.validate(rootObject, schema);
 ```
 
-### 4. JSON5 Support
-Parse human-readable JSON5 configuration files with ease.
+### 4. Full JSON5 Support
+Parse human-readable JSON5 configuration files with single quotes, unquoted keys, and comments:
 ```java
-ParserConfig config = new ParserConfig.Builder().enableJson5(true).build();
+ParserConfig config = ParserConfig.json5();
 Parser parser = new Parser("{ name: 'Animesh', /* comment */ hex: 0xFF }", config);
 ```
 
 ### 5. Object Mapping / Data Binding
-Map JSON directly to your Java POJOs using reflection, supported by `@JsonName` and `@JsonIgnore` annotations.
+Map JSON directly to your Java POJOs using reflection, supported by `@JsonName` and `@JsonIgnore` annotations:
 ```java
 JsonMapper mapper = new JsonMapper();
 User user = mapper.readValue(rootObject, User.class);
 ```
 
 ### 6. Zero-Allocation Streaming
-Achieve maximum throughput for multi-gigabyte JSON files using a shared `char[]` buffer that prevents object allocation and GC pauses.
+Achieve maximum throughput for multi-gigabyte JSON files using a shared `char[]` buffer to eliminate object allocation and GC pauses:
 ```java
 ZeroAllocStreamParser parser = new ZeroAllocStreamParser(reader);
 while (parser.hasNext()) {
@@ -177,26 +150,53 @@ while (parser.hasNext()) {
 }
 ```
 
-### 7. Node Graph Visualizer
-A modern web application built with React, Vite, and React Flow to visualize JSON payloads as stunning node-based diagrams. 
-Includes Live Parsing, Search Highlighting, Interactive Zoom, and PNG Exports.
+---
+
+## 🚀 REST API Endpoints & Docker Deployment
+
+The Java project includes a built-in zero-dependency HTTP server ([Server.java](file:///c:/CipherVault/Code/Projects/JSON%20Parser/json_parser/src/main/java/com/jsonparser/server/Server.java)).
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/health` | `GET` | Service health status |
+| `/api/parse` | `POST` | Parses raw JSON/JSON5 string via Java Engine |
+| `/api/diff` | `POST` | Computes diff between `{ "old": ..., "new": ... }` |
+
+### Running with Docker:
+```sh
+# Build Docker image
+docker build -t json-parser-api .
+
+# Run Docker container
+docker run -p 8080:8080 json-parser-api
+```
+
+---
+
+## 🎨 Node Graph Visualizer (React Web App)
+
+Located in the [visualizer](file:///c:/CipherVault/Code/Projects/JSON%20Parser/json_parser/visualizer) directory. Built with **React 19**, **Vite**, **TypeScript**, and **React Flow** (`@xyflow/react`).
+
+* **Live Demo**: [json-parser-sooty.vercel.app](https://json-parser-sooty.vercel.app)
+* **Features**: Real-time Java API parsing, search highlighting, Left-to-Right layouting via Dagre, and PNG exports.
+
 ```sh
 cd visualizer
+npm install
 npm run dev
 ```
 
 ---
 
-## Building & Testing
+## 🧪 Building & Testing
 
-To run the full test suite (JUnit 5):
+To execute the unit test suite (30+ tests passing):
 
 ```sh
 mvn clean test
 ```
 
-## Known Limitations
-- Relies on `java.math.BigDecimal` for arbitrary-precision decimal numbers, which may have an overhead for extremely large files compared to native primitives.
+---
 
-## Author
-Created by [Animesh-86](https://github.com/Animesh-86).
+## 👨‍💻 Author
+Created with ❤️ by **[Animesh Sharma](https://github.com/Animesh-86)**.
