@@ -7,7 +7,9 @@ import './App.css';
 const JAVA_API_URL = 'https://json-parser-api.onrender.com/api/parse';
 
 function App() {
-  const [jsonText, setJsonText] = useState('{\n  // JSON5 comments supported by Java Engine!\n  project: "JSON Parser",\n  version: 1.0,\n  features: ["JSON5", "Zero-Alloc", "Visualizer"],\n  active: true,\n  nested: {\n    speed: "blazing fast",\n    types: [1, 2, 3]\n  }\n}');
+  const [jsonText, setJsonText] = useState(
+    '{\n  "project": "JSON Parser",\n  "version": 1.0,\n  "features": ["JSON5", "Zero-Alloc", "Visualizer"],\n  "active": true,\n  "nested": {\n    "speed": "blazing fast",\n    "types": [1, 2, 3]\n  }\n}'
+  );
   const [parsedData, setParsedData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
