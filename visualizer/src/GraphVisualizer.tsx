@@ -9,7 +9,8 @@ import {
   ConnectionLineType,
   Position,
   ReactFlowProvider,
-  useReactFlow
+  useReactFlow,
+  BackgroundVariant
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
@@ -25,7 +26,7 @@ const COLORS = [
   '#00ff00', // neon green
   '#ff9900', // neon orange
   '#ffff00', // neon yellow
-  '#ff0000', // red
+  '#ff0080', // neon pink
 ];
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
@@ -33,12 +34,11 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   
   // Rankdir LR for Left-to-Right layout
-  dagreGraph.setGraph({ rankdir: 'LR', nodesep: 150, ranksep: 300 });
+  dagreGraph.setGraph({ rankdir: 'LR', nodesep: 140, ranksep: 280 });
 
   nodes.forEach((node) => {
-    // Better estimation of node height (Header ~35px + Each row ~35px)
     const propsCount = (node.data as any).properties?.length || 1;
-    const estimatedHeight = 35 + (propsCount * 30);
+    const estimatedHeight = 40 + (propsCount * 32);
     dagreGraph.setNode(node.id, { width: 280, height: estimatedHeight });
   });
 
@@ -52,9 +52,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
     const nodeWithPosition = dagreGraph.node(n);
     const node = nodes.find((no) => no.id === n);
     if (node) {
-      // Offset by half dimensions since dagre positions from center
       node.position = {
-        x: nodeWithPosition.x - 140, // Half of 280 width
+        x: nodeWithPosition.x - 140,
         y: nodeWithPosition.y - (nodeWithPosition.height / 2),
       };
       node.targetPosition = Position.Left;
@@ -66,7 +65,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 interface GraphVisualizerProps {
-  data: any; // Raw parsed JSON
+  data: any;
   searchQuery?: string;
 }
 
@@ -82,7 +81,7 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ data, searchQuery = '
 
     const traverse = (obj: any, name: string, parentId: string | null = null, sourceHandleId: string | null = null, depth: number = 0) => {
       if (obj === null || typeof obj !== 'object') {
-        return; // primitives are handled inside their parent node
+        return;
       }
 
       const id = createNodeId();
@@ -90,7 +89,6 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ data, searchQuery = '
       const nodeColor = getColor(depth);
 
       const properties: CustomNodeData['properties'] = [];
-
       const keys = isArray ? obj.map((_: any, i: number) => String(i)) : Object.keys(obj);
 
       keys.forEach((k: string) => {
@@ -116,12 +114,10 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ data, searchQuery = '
         });
 
         if (hasChild) {
-          // Recursive call for nested objects/arrays
           traverse(val, k, id, propId, depth + 1);
         }
       });
 
-      // Check if node matches search query
       const searchLower = searchQuery.toLowerCase();
       let isHighlighted = false;
       if (searchLower) {
@@ -153,10 +149,17 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ data, searchQuery = '
           target: id,
           sourceHandle: sourceHandleId,
           type: 'smoothstep',
-          style: { stroke: nodeColor, strokeWidth: 1.5, strokeDasharray: '4 4' },
+          animated: true, // Enables smooth animated flow along connection paths!
+          style: { 
+            stroke: nodeColor, 
+            strokeWidth: 2, 
+            filter: `drop-shadow(0 0 6px ${nodeColor}88)` 
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: nodeColor,
+            width: 16,
+            height: 16,
           },
         });
       }
@@ -166,8 +169,6 @@ const GraphVisualizer: React.FC<GraphVisualizerProps> = ({ data, searchQuery = '
       if (typeof data === 'object') {
         traverse(data, 'root', null, null, 0);
       } else {
-        // If the root itself is a primitive (rare for valid JSON payload but possible)
-        // Check if primitive root matches
         const searchLower = searchQuery.toLowerCase();
         const valueStr = String(data);
         const isHighlighted = searchLower ? (valueStr.toLowerCase().includes(searchLower) || 'root'.includes(searchLower)) : false;
@@ -223,15 +224,15 @@ const Flow: React.FC<{ layoutedNodes: Node[], layoutedEdges: Edge[] }> = ({ layo
       edges={layoutedEdges}
       nodeTypes={nodeTypes}
       onNodeClick={onNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1.2 }}
-        minZoom={0.1}
-        maxZoom={2}
-        connectionLineType={ConnectionLineType.SmoothStep}
-      >
-        <Background color="#1a1a24" gap={25} size={1} />
-        <Controls />
-      </ReactFlow>
+      fitView
+      fitViewOptions={{ padding: 0.25, maxZoom: 1.2 }}
+      minZoom={0.1}
+      maxZoom={2}
+      connectionLineType={ConnectionLineType.SmoothStep}
+    >
+      <Background variant={BackgroundVariant.Dots} color="#21262d" gap={24} size={1.5} />
+      <Controls />
+    </ReactFlow>
   );
 };
 

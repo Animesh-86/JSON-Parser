@@ -18,15 +18,36 @@ export interface CustomNodeData {
 
 const CustomNode: React.FC<{ data: CustomNodeData }> = ({ data }) => {
   return (
-    <div className={`custom-node ${data.isHighlighted ? 'highlighted' : ''}`} style={{ borderColor: data.color }}>
-      <div className="custom-node-header" style={{ borderBottomColor: data.color, backgroundColor: 'rgba(0,0,0,0.4)' }}>
-        <span style={{ color: data.color }}>{data.name}</span>
-        <span className="custom-node-type" style={{ color: 'rgba(255,255,255,0.5)' }}>{data.type}</span>
+    <div 
+      className={`custom-node ${data.isHighlighted ? 'highlighted' : ''}`} 
+      style={{ 
+        borderColor: data.color,
+        '--node-accent-color': data.color
+      } as React.CSSProperties}
+    >
+      <div 
+        className="custom-node-header" 
+        style={{ 
+          borderBottomColor: `${data.color}55`,
+          background: `linear-gradient(90deg, ${data.color}22 0%, rgba(13, 17, 23, 0.8) 100%)`
+        }}
+      >
+        <span className="custom-node-title" style={{ color: data.color }}>
+          <span className="node-indicator-dot" style={{ backgroundColor: data.color }}></span>
+          {data.name}
+        </span>
+        <span className="custom-node-type" style={{ color: `${data.color}bb` }}>
+          {data.type}
+        </span>
       </div>
       
       <div className="custom-node-body">
         {/* Target handle for incoming edges to this node */}
-        <Handle type="target" position={Position.Left} style={{ top: 15 }} />
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          style={{ top: 20, borderColor: data.color, backgroundColor: '#0d1117' }} 
+        />
 
         {data.properties.map((prop) => (
           <div key={prop.key} className="custom-node-row">
@@ -42,7 +63,7 @@ const CustomNode: React.FC<{ data: CustomNodeData }> = ({ data }) => {
                 type="source"
                 position={Position.Right}
                 id={prop.id}
-                style={{ top: '50%', transform: 'translateY(-50%)', borderColor: data.color }}
+                style={{ top: '50%', transform: 'translateY(-50%)', borderColor: data.color, backgroundColor: '#0d1117' }}
               />
             )}
           </div>
