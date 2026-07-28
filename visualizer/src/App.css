@@ -167,3 +167,14 @@
 .node-value.boolean { color: var(--syntax-boolean); }
 .node-value.null { color: var(--syntax-null); }
 .node-bracket { color: var(--text-secondary); }
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
