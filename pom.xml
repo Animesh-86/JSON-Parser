@@ -52,6 +52,20 @@
 
     <build>
         <plugins>
+            <!-- Executable JAR plugin for Server -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.jsonparser.server.Server</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
             <!-- Maven Shade Plugin for JMH Uber-Jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
